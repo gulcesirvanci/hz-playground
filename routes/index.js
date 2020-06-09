@@ -39,25 +39,26 @@ function run(fileName, id, lang, res) {
     let runnerStderr = "";
     runner.stderr.on("data", (data) => {
         runnerStderr += data.toString();
+        const lines = runnerStderr.split("\n");
+        const n = lines.length - 1;
+        for (const line of lines) {
+            if (!line || n === 0) {
+                runnerStderr = line;
+                break;
+            }
+            res.write("data: " + line + "\n\n");
+        }
     })
 
     runner.on("close", (returnCode) => {
-        if (runnerStderr && returnCode !== 0) {
-            res.write("data: Runner failed\n\n");
-            const lines = runnerStderr.split("\n");
-            for (const line of lines) {
-                if (!line) {
-                    continue;
-                }
-                res.write("data: " + line + "\n\n");
-            }
+        if (returnCode !== 0) {
+            res.write("data: Runner failed: Return code: " + returnCode + "\n\n");
         }
        res.end();
     });
 }
 
 function compileAndRun(fileName, id, lang, res) {
-    console.log(lang.getCompiler(), lang.getCompilerArgs(fileName, id));
     const compiler = cp.spawn(lang.getCompiler(), lang.getCompilerArgs(fileName, id));
     processCleaner.monitorProcess(compiler);
 

@@ -1,63 +1,115 @@
 <!DOCTYPE Html>
 <html>
+<head>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css"
+          integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous">
+    <style type="text/css" media="screen">
+        #editor {
+            position: absolute;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            left: 0;
+        }
+    </style>
+</head>
 <body>
 
-<form id="form" action="http://localhost:3000/test" method="post">
-  <textarea id="code" name="code" rows="40" cols="100">
-    console.log("hey");
-setInterval(() => {
-console.log("hey after 1 sec")
-}, 1000);
-  </textarea>
-  <label for="lang">Choose a language:</label>
+<div class="container-fluid">
+    <div class="row">
+        <div class="col">
+            <div id="editor"></div>
+        </div>
+        <div class="col">
+            <div>
+                <label for="lang">Choose a language:</label>
+                <select id="lang" name="lang" class="custom-select">
+                    <option value="node">Node.js</option>
+                    <option value="java">Java</option>
+                </select>
+                <button id="run" type="button" class="btn btn-primary mt-1">Run</button>
+            </div>
+            <div class="alert alert-primary mt-1 mb-1" role="alert">Output</div>
+            <div><pre><code id="output"></code></pre></div>
+        </div>
+    </div>
+</div>
 
-  <select id="lang" name="lang">
-    <option value="node">Node.js</option>
-    <option value="java">Java</option>
-  </select>
-  <input type="hidden" name="id" id="id">
-  <input id="run" type="submit" value="Run">
-</form>
-
-<div id="output"></div>
-
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"
+        integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj"
+        crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"
+        integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo"
+        crossorigin="anonymous"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js"
+        integrity="sha384-OgVRvuATP1z7JjHLkuOU7Xw704+h835Lr+6QL9UvYjZE3Ipu6Tp75j7Bh/kR0JKI"
+        crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+<script src="scripts/ace.js" type="text/javascript" charset="utf-8"></script>
+<script src="scripts/mode-javascript.js" type="text/javascript" charset="utf-8"></script>
+<script src="scripts/mode-java.js" type="text/javascript" charset="utf-8"></script>
+<script>
+    var editor = ace.edit("editor");
+    editor.setTheme("ace/theme/monokai");
+    editor.session.setMode("ace/mode/javascript");
+    editor.setOptions({
+        autoScrollEditorIntoView: true,
+        maxLines: 30,
+    });
+    editor.renderer.setScrollMargin(10, 10, 10, 10);
+    document.getElementById('editor').style.fontSize = '20px';
+</script>
 <script type="text/javascript">
 
-  var id = localStorage.getItem("id");
-  if (id) {
-    localStorage.removeItem("id");
-    var evtSource = new EventSource("http://localhost:3000/test/" + id);
-    evtSource.onmessage = function (e) {
-      console.log(e);
-      var div = document.getElementById('output');
-      var elem = document.createElement("p");
-      elem.innerHTML = e.data;
-      div.appendChild(elem);
+    document.getElementById('lang').onchange = function () {
+        var langSelect = document.getElementById("lang");
+        var lang = langSelect.options[langSelect.selectedIndex].value;
+        var editor = ace.edit("editor");
+        if (lang === 'java') {
+            editor.session.setMode("ace/mode/java");
+        } else {
+            editor.session.setMode("ace/mode/javascript");
+        }
     }
 
-    evtSource.onerror = function (e) {
-      document.getElementById("run").disabled = false;
-      evtSource.close();
-    }
-  }
+    document.getElementById('run').onclick = run;
+    function run() {
+        document.getElementById('run').disabled = true;
 
-  document.getElementById('form').onsubmit = run;
-  function run() {
-    document.getElementById('run').disabled = true;
-    var id = makeid(32);
-    document.getElementById("id").value = id;
-    localStorage.setItem("id", id);
-  }
+        document.getElementById('output').innerText = '';
 
-  function makeid(length) {
-    var result           = '';
-    var characters       = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-    var charactersLength = characters.length;
-    for ( var i = 0; i < length; i++ ) {
-      result += characters.charAt(Math.floor(Math.random() * charactersLength));
+        var id = makeid(32);
+        var langSelect = document.getElementById("lang");
+        var lang = langSelect.options[langSelect.selectedIndex].value;
+        var editor = ace.edit("editor");
+        var code = editor.getValue();
+
+        axios.post('http://localhost:3000/test', {
+            id, lang, code
+        })
+            .then(function (res) {
+                var evtSource = new EventSource("http://localhost:3000/test/" + id);
+                evtSource.onmessage = function (e) {
+                    var div = document.getElementById('output');
+                    div.innerText += e.data + "\n";
+                }
+
+                evtSource.onerror = function (e) {
+                    document.getElementById("run").disabled = false;
+                    evtSource.close();
+                }
+            })
     }
-    return result;
-  }
+
+    function makeid(length) {
+        var result = '';
+        var characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+        var charactersLength = characters.length;
+        for (var i = 0; i < length; i++) {
+            result += characters.charAt(Math.floor(Math.random() * charactersLength));
+        }
+        return result;
+    }
 
 </script>
 

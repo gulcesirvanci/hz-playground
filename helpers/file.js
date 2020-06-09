@@ -33,7 +33,7 @@ function cleanUpFiles(folder) {
                     return;
                 }
 
-                if (stat.isDirectory()) {
+                if (stat.isDirectory() && file !== 'node_modules') {
                     cleanUpFiles(filePath);
                     fs.rmdir(filePath, (err4) => {});
                     return;
@@ -53,13 +53,18 @@ function writeToFile(id, extension, content, shouldBeInFolder, callback) {
     const folder = shouldBeInFolder ? folderPath + "/" + id : folderPath;
 
     const filePath = path.join(folder, fileName);
-    fs.mkdir(folder, {recursive: true}, (err) => {
-        if (err) {
-            callback(err);
-            return;
-        }
+    if (shouldBeInFolder) {
+        fs.mkdir(folder, {recursive: true}, (err) => {
+            if (err && err.code !== 'EEXIST') {
+                callback(err);
+                return;
+            }
+            fs.writeFile(filePath, content, callback);
+        });
+    } else {
         fs.writeFile(filePath, content, callback);
-    })
+    }
+
 
     return filePath;
 }

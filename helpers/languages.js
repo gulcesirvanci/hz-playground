@@ -57,15 +57,17 @@ class Language {
     }
 }
 
+const javaCompilerPath = "/home/metin/hazelcast-client-playground-java"
+
 const java = new Language("java")
-    .setCompiler("javac")
+    .setCompiler("java")
     .setCompilerArgsGetter((file, id) => {
-        return ["-cp", "/home/metin/hazelcast-client-playground-java/lib/*", file];
+        return ["-jar", javaCompilerPath + "/target/client-playground-1.0-SNAPSHOT.jar", "-f", file, "-c", javaCompilerPath + "/lib", "-o", "/tmp/hz-playground/" + id];
     })
     .setFileExtension("java")
     .setRunner("java")
     .setRunnerArgsGetter((file, id) => {
-        return ["-cp", "/home/metin/hazelcast-client-playground-java/lib/*:.:/tmp/hz-playground/" + id, "Main"];
+        return ["-cp", javaCompilerPath + "/lib/*:.:/tmp/hz-playground/" + id, "Playground"];
     })
 
 const nodeJs = new Language('node')
