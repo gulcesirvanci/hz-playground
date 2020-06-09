@@ -20,17 +20,20 @@
         <div class="col">
             <div id="editor"></div>
         </div>
-        <div class="col">
-            <div>
+        <div class="col ml-4 mr-4">
+            <div class="row mt-2">
                 <label for="lang">Choose a language:</label>
                 <select id="lang" name="lang" class="custom-select">
                     <option value="node">Node.js</option>
                     <option value="java">Java</option>
                 </select>
-                <button id="run" type="button" class="btn btn-primary mt-1">Run</button>
+                <button id="run" type="button" class="btn btn-primary mt-2">Run</button>
             </div>
-            <div class="alert alert-primary mt-1 mb-1" role="alert">Output</div>
-            <div><pre><code id="output"></code></pre></div>
+            <div class="row alert alert-primary mt-2" role="alert">
+                <div class="col-md-8 pl-0">Output</div>
+                <div class="col-md-4">Powered by <a href="https://cloud.hazelcast.com" target="_blank"><img class="mx-auto" src="hz-cloud-logo.svg" height="30"></a></div>
+            </div>
+            <div class="row"><pre><code id="output"></code></pre></div>
         </div>
     </div>
 </div>
