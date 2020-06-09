@@ -36,8 +36,8 @@ class Language {
         return this.compiler;
     }
 
-    getCompilerArgs(file) {
-        return this.compilerArgsGetter(file);
+    getCompilerArgs(file, id) {
+        return this.compilerArgsGetter(file, id);
     }
 
     getExtension() {
@@ -48,8 +48,8 @@ class Language {
         return this.runner;
     }
 
-    getRunnerArgs(file) {
-        return this.runnerArgsGetter(file);
+    getRunnerArgs(file, id) {
+        return this.runnerArgsGetter(file, id);
     }
 
     needsCompilation() {
@@ -59,10 +59,14 @@ class Language {
 
 const java = new Language("java")
     .setCompiler("javac")
-    .setCompilerArgsGetter((file) => {
-        return ["-cp", "hazelcast.jar;" + file]
+    .setCompilerArgsGetter((file, id) => {
+        return ["-cp", "/home/metin/hazelcast-client-playground-java/lib/*", file];
     })
-    .setFileExtension("java");
+    .setFileExtension("java")
+    .setRunner("java")
+    .setRunnerArgsGetter((file, id) => {
+        return ["-cp", "/home/metin/hazelcast-client-playground-java/lib/*:.:/tmp/hz-playground/" + id, "Main"];
+    })
 
 const nodeJs = new Language('node')
     .setFileExtension('js')

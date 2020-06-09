@@ -1,7 +1,7 @@
-const ProcessCleaner = require('../helpers/process_cleaner')
+const ProcessCleaner = require('../helpers/process')
 const cp = require('child_process')
 const Languages = require('../helpers/languages');
-const {writeToFile} = require('../helpers/file_cleaner');
+const {writeToFile} = require('../helpers/file');
 
 const express = require('express');
 const router = express.Router();
@@ -18,8 +18,8 @@ function addToCache(id, lang, code) {
     }, 60000);
 }
 
-function run(fileName, lang, res) {
-    const runner = cp.spawn(lang.getRunner(), lang.getRunnerArgs(fileName));
+function run(fileName, id, lang, res) {
+    const runner = cp.spawn(lang.getRunner(), lang.getRunnerArgs(fileName, id));
     processCleaner.monitorProcess(runner);
 
     let runnerStdout = "";
@@ -45,11 +45,9 @@ function run(fileName, lang, res) {
         if (runnerStderr && returnCode !== 0) {
             res.write("data: Runner failed\n\n");
             const lines = runnerStderr.split("\n");
-            const n = lines.length - 1;
             for (const line of lines) {
-                if (!line || n === 0) {
-                    runnerStderr = line;
-                    break;
+                if (!line) {
+                    continue;
                 }
                 res.write("data: " + line + "\n\n");
             }
@@ -58,8 +56,9 @@ function run(fileName, lang, res) {
     });
 }
 
-function compileAndRun(fileName, lang, res) {
-    const compiler = cp.spawn(lang.getCompiler(), lang.getCompilerArgs(fileName));
+function compileAndRun(fileName, id, lang, res) {
+    console.log(lang.getCompiler(), lang.getCompilerArgs(fileName, id));
+    const compiler = cp.spawn(lang.getCompiler(), lang.getCompilerArgs(fileName, id));
     processCleaner.monitorProcess(compiler);
 
     let compilerStdout = "";
@@ -74,12 +73,14 @@ function compileAndRun(fileName, lang, res) {
 
     compiler.on("close", (returnCode) => {
        if (returnCode !== 0) {
-           res.write("data: Compilation failed!\nStdout: " + compilerStdout + "\nStderr: " + compilerStderr + "\n\n")
+           res.write("data: Compilation failed!\n\n");
+           res.write("data: Stderr: " + compilerStderr + "\n\n");
+           res.write("data: Stdout: " + compilerStdout + "\n\n");
            res.end();
            return;
        }
 
-       run(fileName, lang, res);
+       run(fileName, id, lang, res);
     });
 }
 
@@ -112,7 +113,7 @@ router.get('/test/:id', (req, res) => {
     let lang = entry.lang;
     let code = entry.code;
 
-    const fileName = writeToFile(lang.getExtension(), code, (err) => {
+    const fileName = writeToFile(id, lang.getExtension(), code, lang.getExtension() === 'java', (err) => {
         if (err) {
             console.log("Cannot write file to disk!: ", err)
             res.end();
@@ -120,9 +121,9 @@ router.get('/test/:id', (req, res) => {
         }
 
         if (lang.needsCompilation()) {
-            compileAndRun(fileName, lang, res);
+            compileAndRun(fileName, id, lang, res);
         } else {
-            run(fileName, lang, res);
+            run(fileName, id, lang, res);
         }
     });
 });

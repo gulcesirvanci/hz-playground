@@ -2,7 +2,7 @@ const express = require('express');
 const path = require('path');
 const cookieParser = require('cookie-parser');
 const logger = require('morgan');
-const {FileCleaner} = require('./helpers/file_cleaner');
+const {FileCleaner} = require('./helpers/file');
 
 const indexRouter = require('./routes/index');
 

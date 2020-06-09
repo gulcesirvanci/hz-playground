@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<hazelcast-client xsi:schemaLocation="http://www.hazelcast.com/schema/client-config hazelcast-client-config-3.11.xsd"
+                  xmlns="http://www.hazelcast.com/schema/client-config"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <group>
+        <name>playground-test</name>
+        <password>2c7727ab5e0449bc89e9995843000b20</password>
+    </group>
+    <properties>
+        <property name="hazelcast.client.statistics.enabled">true</property>
+    </properties>
+    <network>
+        <hazelcast-cloud enabled="true">
+            <discovery-token>lelaGYdWvtMWyeu9RMAzEAYL7fLiIcSt5yedTnbibQn9zaZML5</discovery-token>
+        </hazelcast-cloud>
+    </network>
+</hazelcast-client>
