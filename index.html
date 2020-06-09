@@ -1,31 +1,63 @@
 <!DOCTYPE Html>
 <html>
 <body>
-<ul id="eventlist"> </ul>
 
-<script>
-    var eventList = document.getElementById("eventlist");
-    var evtSource = new EventSource("http://localhost:3000/test");
+<form id="form" action="http://localhost:3000/test" method="post">
+  <textarea id="code" name="code" rows="40" cols="100">
+    console.log("hey");
+setInterval(() => {
+console.log("hey after 1 sec")
+}, 1000);
+  </textarea>
+  <label for="lang">Choose a language:</label>
 
-    var newElement = document.createElement("li");
-    newElement.innerHTML = "Messages:";
-    eventList.appendChild(newElement);
+  <select id="lang" name="lang">
+    <option value="node">Node.js</option>
+    <option value="java">Java</option>
+  </select>
+  <input type="hidden" name="id" id="id">
+  <input id="run" type="submit" value="Run">
+</form>
 
+<div id="output"></div>
 
-    evtSource.onmessage = function(e) {
-        console.log("received event");
-        console.log(e);
-        var newElement = document.createElement("li");
+<script type="text/javascript">
 
-        newElement.innerHTML = "message: " + e.data;
-        eventList.appendChild(newElement);
-    };
+  var id = localStorage.getItem("id");
+  if (id) {
+    localStorage.removeItem("id");
+    var evtSource = new EventSource("http://localhost:3000/test/" + id);
+    evtSource.onmessage = function (e) {
+      console.log(e);
+      var div = document.getElementById('output');
+      var elem = document.createElement("p");
+      elem.innerHTML = e.data;
+      div.appendChild(elem);
+    }
 
-    evtSource.onerror = function(e) {
-        console.log("EventSource failed.");
-    };
+    evtSource.onerror = function (e) {
+      document.getElementById("run").disabled = false;
+      evtSource.close();
+    }
+  }
 
-    console.log(evtSource);
+  document.getElementById('form').onsubmit = run;
+  function run() {
+    document.getElementById('run').disabled = true;
+    var id = makeid(32);
+    document.getElementById("id").value = id;
+    localStorage.setItem("id", id);
+  }
+
+  function makeid(length) {
+    var result           = '';
+    var characters       = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    var charactersLength = characters.length;
+    for ( var i = 0; i < length; i++ ) {
+      result += characters.charAt(Math.floor(Math.random() * charactersLength));
+    }
+    return result;
+  }
 
 </script>
 
