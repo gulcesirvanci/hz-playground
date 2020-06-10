@@ -91,10 +91,14 @@ const nodeJs = new Language("node")
   });
 
 const go = new Language("go")
+  .setCompiler("go")
+  .setCompilerArgsGetter(() => {
+    return ["mod init github.com/hazelcast/hazelcast-go-client"];
+  })
   .setFileExtension("go")
   .setRunner("go")
   .setRunnerArgsGetter((file) => {
-    return [file];
+    return [" run ", file];
   });
 
 const languages = {};
